@@ -30,7 +30,7 @@ Extracting these header values can be done through the browser's developer tools
 ### Usage
 With the two header values extracted, a device's timeline can be extracted as follows...
 ```bash
-mdeproxy --cookie COOKIE --xsrf XSRF --machine MID --from 2024-04-01T00:00:00Z --to 2024-07-01T00:00:00Z --output timeline.jsonl
+mdeproxy timeline --cookie COOKIE --xsrf XSRF --machine MID --from 2024-04-01T00:00:00Z --to 2024-07-01T00:00:00Z --output timeline.jsonl
 ```
 - `COOKIE` being the cookie header extracted through the browser's developer tools.
 - `XSRF` being the cross-site request forgery token extracted through the browser's developer tools.

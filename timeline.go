@@ -8,8 +8,8 @@ import (
 )
 
 func timeline() (*cobra.Command, error) {
-	now := time.Now()
-	from := now.AddDate(0, -6, 0).Format(times.Layout)
+	now := time.Now().UTC()
+	from := now.AddDate(0, -6, 0).Add(time.Minute).Format(times.Layout)
 	to := now.Format(times.Layout)
 	var machine string
 
