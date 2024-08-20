@@ -83,7 +83,9 @@ func (c *client) Timeline(ctx context.Context, from, to time.Time, id string) <-
 	uri := base.JoinPath("machines", id, "events")
 	query := uri.Query()
 	query.Set("fromDate", from.Format(times.Layout))
-	query.Set("toDate", times.Min(from.AddDate(0, 0, 7), to).Format(times.Layout))
+	// Ensure the first chunk is small enough to only consume data forward.
+	// This ensures we can resume broken transfers.
+	query.Set("toDate", times.Min(from.Add(time.Minute), to).Format(times.Layout))
 	query.Set("generateIdentityEvents", "true")
 	query.Set("includeIdentityEvents", "true")
 	query.Set("supportMdiOnlyEvents", "true")
@@ -190,7 +192,16 @@ func (c *client) do(req *http.Request) (resp *http.Response, err error) {
 	// Execute the query
 	for i := 0; i < c.retries; i++ {
 		if resp, err = c.client.Do(req); err == nil {
-			break
+			if resp.StatusCode < http.StatusInternalServerError {
+				break
+			}
+			// Consider HTTP server status codes as errors
+			m, merr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if merr == nil {
+				merr = errors.New(string(m))
+			}
+			err = fmt.Errorf("bad status: %s (%s): %w", resp.Status, http.StatusText(resp.StatusCode), merr)
 		}
 		log.Printf("Retrying (%d/%d): %s", i+1, c.retries, err)
 		time.Sleep(5 * time.Second)
